@@ -4,9 +4,11 @@ import { db } from "../firebase/config";
 import {
   addDoc,
   deleteDoc,
+  updateDoc,
   collection,
   doc,
   serverTimestamp,
+  setDoc,
 } from "firebase/firestore";
 
 let initialState = {
@@ -78,12 +80,21 @@ export const useFirestore = (coll) => {
   };
 
   // add a document
-  const addDocument = async (document) => {
+  const addDocument = async (document, id) => {
     dispatch({ type: "IS_PENDING" });
 
     try {
       const createdAt = serverTimestamp();
-      const addedDocument = await addDoc(ref, { ...document, createdAt });
+      let addedDocument;
+
+      if (id) {
+        const docRef = doc(ref, id);
+        addedDocument = await setDoc(docRef, { ...document, createdAt });
+      }
+
+      if (!id) {
+        addedDocument = await addDoc(ref, { ...document, createdAt });
+      }
 
       dispatchIfNotCancelled({
         type: "ADDED_DOCUMENT",
@@ -108,9 +119,23 @@ export const useFirestore = (coll) => {
     }
   };
 
+  // update a document
+  const updateDocument = async (id, document) => {
+    dispatch({ type: "IS_PENDING" });
+
+    try {
+      await updateDoc(doc(ref, id), { ...document });
+      dispatchIfNotCancelled({
+        type: "UPDATED_DOCUMENT",
+      });
+    } catch (err) {
+      dispatchIfNotCancelled({ type: "ERROR", payload: err.message });
+    }
+  };
+
   useEffect(() => {
     return () => setIsCancelled(true);
   }, []);
 
-  return { response, addDocument, deleteDocument };
+  return { response, addDocument, deleteDocument, updateDocument };
 };

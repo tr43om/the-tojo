@@ -10,14 +10,38 @@ import { Create } from "./pages/create/Create";
 import { Navbar } from "./components/Navbar";
 import { Sidebar } from "./components/Sidebar";
 import { useAuthContext } from "./hooks/useAuthContext";
+import { OnlineUsers } from "./components/OnlineUsers";
+import { useUnload } from "./hooks/useUnload";
+import { useFirestore } from "./hooks/useFirestore";
+
+import { useEffect } from "react";
+
+// rtdb
+import { auth, rtdb } from "./firebase/config";
+import { ref, set, onDisconnect, onValue } from "firebase/database";
 
 function App() {
   const { user, authIsReady } = useAuthContext();
+
+  useEffect(() => {
+    if (user) {
+      const userId = auth.currentUser.uid;
+      const reference = ref(rtdb, `/users/${userId}`);
+      // Set the /users/:userId value to true
+      set(reference, true).then(() => console.log("Online presence set"));
+      onDisconnect(reference)
+        .remove()
+        .then(() => console.log("On disconnect function configured."));
+    }
+
+    // Remove the node whenever the client disconnects
+  }, []);
+
   return (
     <div className="App">
       {authIsReady && (
         <BrowserRouter>
-          <Sidebar />
+          {user && <Sidebar />}
           <div className="container">
             <Navbar />
             <Routes>
@@ -43,6 +67,7 @@ function App() {
               />
             </Routes>
           </div>
+          {user && <OnlineUsers />}
         </BrowserRouter>
       )}
     </div>

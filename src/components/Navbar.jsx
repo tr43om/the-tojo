@@ -10,6 +10,8 @@ export const Navbar = () => {
   const { logout, isPending } = useLogout();
   const { user } = useAuthContext();
 
+  console.log(isPending);
+
   return (
     <div className="navbar">
       <ul>

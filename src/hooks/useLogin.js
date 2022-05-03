@@ -4,6 +4,9 @@ import { ACTIONS } from "../context/AuthContext";
 import { auth } from "../firebase/config";
 import { useAuthContext } from "./useAuthContext";
 import { useFirestore } from "./useFirestore";
+import { ref, set } from "firebase/database";
+import { rtdb } from "../firebase/config";
+import { useUserPresence } from "./useUserPresence";
 
 export const useLogin = () => {
   const [isCancelled, setIsCancelled] = useState(false);
@@ -11,6 +14,7 @@ export const useLogin = () => {
   const [error, setError] = useState(null);
   const { dispatch } = useAuthContext();
   const { updateDocument: updateOnlineStatus } = useFirestore("users");
+  const { setOnline } = useUserPresence();
 
   const login = async (email, password) => {
     setIsPending(true);
@@ -20,9 +24,11 @@ export const useLogin = () => {
       // sign in user
       await signInWithEmailAndPassword(auth, email, password);
 
-      // update online status
+      // // update online status for firestore
+      // await updateOnlineStatus(auth.currentUser.uid, { online: true });
+      // console.log(rtdb);
 
-      await updateOnlineStatus(auth.currentUser.uid, { online: true });
+      await setOnline(auth.currentUser.uid);
 
       // dispatch login action
       dispatch({ type: ACTIONS.LOGIN, payload: auth.currentUser });

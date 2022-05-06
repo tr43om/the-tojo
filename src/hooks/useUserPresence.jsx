@@ -22,12 +22,22 @@ export const useUserPresence = () => {
       if (document.visibilityState !== "visible") {
         await set(reference, "away");
       } else {
-        await set(reference, true);
+        await set(reference, "online");
       }
     })();
   });
 
   useEffect(() => {
+    onValue(ref(realtimeDB, ".info/connected"), (snap) => {
+      if (snap.val() === true) {
+        (async () => {
+          const userId = auth?.currentUser?.uid;
+          const reference = ref(realtimeDB, `/users/${userId}`);
+          await set(reference, "online");
+        })();
+      }
+    });
+
     onValue(usersRef, (snap) => {
       const snapshot = snap.val();
       if (snap.exists()) {
@@ -47,7 +57,7 @@ export const useUserPresence = () => {
 
   const isOnline = (uid) => {
     if (onlineUsers) {
-      if (onlineUsers.some((user) => user[0] === uid && user[1] === true))
+      if (onlineUsers.some((user) => user[0] === uid && user[1] === "online"))
         return "online";
       if (onlineUsers.some((user) => user[0] === uid && user[1] === "away"))
         return "away";
@@ -57,7 +67,6 @@ export const useUserPresence = () => {
   const setOnline = async (uid) => {
     await set(ref(realtimeDB, `/users/${uid}`), "online");
 
-    console.log("online");
     return;
   };
 

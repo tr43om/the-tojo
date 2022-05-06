@@ -1,7 +1,5 @@
-import { useAuthContext } from "../hooks/useAuthContext";
 import { useCollection } from "../hooks/useCollection";
-import { useFirestore } from "../hooks/useFirestore";
-import { useEffect, useState } from "react";
+
 // components
 import { Avatar } from "./Avatar";
 // styles
